@@ -1,0 +1,17 @@
+/* line 120, idle/*.png */
+.idle-sprite {
+  background-image: url('/img/idle-sf9fc39f012.png');
+  background-repeat: no-repeat;
+}
+
+/* line 8, ../sass/style.scss */
+canvas {
+  border: 1px solid #000;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}

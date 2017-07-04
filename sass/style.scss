@@ -1,0 +1,14 @@
+@import "compass";
+
+//@import "idle/*.png";
+//@include all-idle-sprites;
+$idle-layout:horizontal;
+@import "idle/*.png";
+
+canvas{
+  border: 1px solid #000;
+  position: absolute;
+  left:50%;
+  top: 50%;
+  @include transform(translate(-50%,-50%));
+}
