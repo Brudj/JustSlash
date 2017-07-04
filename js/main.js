@@ -46,12 +46,6 @@ function draw_back() {
     //background color
     ctx.fillStyle = '#9fc5ed';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    //hero health
-    ctx.fillStyle = '#423384';
-    ctx.fillRect(20, 20, 200, 25);
-    //enemy health
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(canvas.width-220, 20, 200, 25);
     //grass start
     ctx.drawImage(grass_start, 0, canvas.height-96);
     //all grass
@@ -122,6 +116,8 @@ mushrooms.src = 'img/background/mushrooms.png';
 var player = {
     pos: [20, 262],
     health: 100,
+    color: '#481cd5',
+    speed: 160,
     action: 'stay',
     stay: new Sprite('img/hero/stay.png', [0, 0], [83, 141], 6, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
     walk_right: new Sprite('img/hero/walk.png', [15, 0], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -131,19 +127,19 @@ var player = {
     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 };
 var lastAttack = Date.now();
-var playerSpeed = 160;
 var actions = player.action;
-
 
 var enemy = {
     pos: [canvas.width-150, 280],
+    color: '#ff0000',
+    health: 100,
+    speed: 80,
     action: 'walk',
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
-    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0, 1, 2, 3, 4],'horizontal',true),
-    health: 100
+    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0, 1, 2, 3, 4],'horizontal',true)
 };
-var enemySpeed = 80;
+
 var enemy_actions = enemy.action;
 
 function update(dt) {
@@ -160,13 +156,15 @@ function checkCollisions(dt) {
     //check for enemy position
     if( player.pos[0] + 70 < enemy.pos[0] ){
         enemy_actions = 'walk';
-        enemy.pos[0] -= enemySpeed * dt;
+        enemy.pos[0] -= enemy.speed * dt;
     } else{
         enemy_actions = 'attack';
     }
     //check for enemyhealth
     if( enemy.health == 0 ){
         enemy_actions = 'die';
+        enemy.pos[0] = canvas.width + 100;
+        enemy.health = 100;
     }
 }
 function checkText() {
@@ -175,14 +173,6 @@ function checkText() {
         ctx.fillStyle = "#ff0000";
         ctx.fillText("I can`t leave!",60,280);
     }
-    //hero health text
-    ctx.font = "22px Comic Sans MS";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(''+player.health+'%',25,41);
-    //enemy health text
-    ctx.font = "22px Comic Sans MS";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(''+enemy.health+'%',canvas.width-80,41);
 }
 
 function handleInput(dt) {
@@ -199,13 +189,13 @@ function handleInput(dt) {
             player.pos[0] = 20;
             actions = 'stay';
         } else{
-            player.pos[0] -= playerSpeed * dt;
+            player.pos[0] -= player.speed * dt;
             actions = 'walk_left';
         }
     }
 
     if(input.isDown('RIGHT') || input.isDown('d')) {
-        player.pos[0] += playerSpeed * dt;
+        player.pos[0] += player.speed * dt;
         actions = 'walk_right';
     }
 
@@ -213,7 +203,6 @@ function handleInput(dt) {
         actions = 'attack';
         if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
             if( enemy.health == 0 ){
-               // enemy_actions = 'die';
                 console.log(enemy_actions);
             } else{
                 enemy.health -=25;
@@ -245,9 +234,9 @@ function render(dt) {
 
     //renderGrass();
 
-    renderEntity(player,actions);
+    renderEntity(player,actions,1);
 
-    renderEntity(enemy,enemy_actions);
+    renderEntity(enemy,enemy_actions,0);
 
 }
 
@@ -257,11 +246,27 @@ function render(dt) {
 //     }
 // }
 
-function renderEntity(entity,actions) {
+var bar_start,
+    bar_text_start;
+
+function renderEntity(entity,actions,type) {
     ctx.save();
     ctx.translate(entity.pos[0], entity.pos[1]);
     entity[actions].render(ctx);
     ctx.restore();
+    bar_start = 20;
+    bar_text_start = 160;
+    if( !type){
+        bar_start = canvas.width-220;
+        bar_text_start = canvas.width-215;
+    }
+    //health
+    ctx.fillStyle = entity.color;
+    ctx.fillRect(bar_start, 20, entity.health*2, 25);
+    //health text
+    ctx.font = "21px Comic Sans MS";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(''+entity.health+'%',bar_text_start,41);
 }
 
 init();
