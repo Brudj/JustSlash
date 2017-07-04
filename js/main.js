@@ -124,7 +124,8 @@ var player = {
     walk_left: new Sprite('img/hero/walk.png', [0, 131], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     run_right: new Sprite('img/hero/run.png', [0, 131], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     run_left: new Sprite('img/hero/run.png', [0, 0], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    death: new Sprite('img/hero/death.png', [0, 0], [163, 131], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8],'horizontal',true)
 };
 var lastAttack = Date.now();
 var actions = player.action;
@@ -135,12 +136,17 @@ var enemy = {
     health: 100,
     speed: 80,
     action: 'walk',
+    stay: new Sprite('img/enemy/skeleton.png', [0, -10], [106, 110], 4, [0,1, 2, 3]),
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
     die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0, 1, 2, 3, 4],'horizontal',true)
 };
 
 var enemy_actions = enemy.action;
+var enemyState = 1;
+var deathTime;
+var lastEnemyAttack = Date.now();
+var curentTime = Date.now();
 
 function update(dt) {
 
@@ -150,21 +156,47 @@ function update(dt) {
 }
 
 function checkCollisions(dt) {
+    //all enemy logic and actions
+    enemyActions(dt);
+
     //check for text
     checkText();
 
-    //check for enemy position
-    if( player.pos[0] + 70 < enemy.pos[0] ){
-        enemy_actions = 'walk';
-        enemy.pos[0] -= enemy.speed * dt;
+    //check enemy spawn
+    checkEnemySpawn();
+
+}
+function enemyActions(dt) {
+    //check for Player Health
+    if( player.health == 0 ){
+        enemy_actions = 'stay';
+        actions = 'death';
     } else{
-        enemy_actions = 'attack';
+        //check for enemy position
+        if( player.pos[0] + 70 < enemy.pos[0] ){
+            enemy_actions = 'walk';
+            enemy.pos[0] -= enemy.speed * dt;
+        } else {
+            enemy_actions = 'attack';
+            if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
+                //check for health
+                if( player.health != 0 ){
+                    //check for state
+                    if( enemyState ){
+                        player.health -=10;
+                        lastEnemyAttack = Date.now();
+                    }
+                }
+            }
+        }
     }
-    //check for enemyhealth
+    //check for enemy health
     if( enemy.health == 0 ){
         enemy_actions = 'die';
-        enemy.pos[0] = canvas.width + 100;
-        enemy.health = 100;
+        if( enemyState ){
+            deathTime = Date.now();
+        }
+        enemyState = 0;
     }
 }
 function checkText() {
@@ -172,6 +204,13 @@ function checkText() {
         ctx.font = "20px Comic Sans MS";
         ctx.fillStyle = "#ff0000";
         ctx.fillText("I can`t leave!",60,280);
+    }
+}
+function checkEnemySpawn() {
+    if( !enemyState && Date.now() - deathTime > 3000 ){
+        enemy.pos[0] = canvas.width + 100;
+        enemy.health = 100;
+        enemyState = 1;
     }
 }
 
@@ -195,18 +234,19 @@ function handleInput(dt) {
     }
 
     if(input.isDown('RIGHT') || input.isDown('d')) {
-        player.pos[0] += player.speed * dt;
-        actions = 'walk_right';
+        if( enemy.pos[0] - player.pos[0] > 70 ){
+            player.pos[0] += player.speed * dt;
+            actions = 'walk_right';
+        } else{
+            actions = 'stay';
+        }
     }
 
     if(input.isDown('SPACE') ){
         actions = 'attack';
         if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
-            if( enemy.health == 0 ){
-                console.log(enemy_actions);
-            } else{
+            if( enemy.health != 0 ){
                 enemy.health -=25;
-                console.log(enemy.health);
             }
             lastAttack = Date.now();
         }
@@ -225,26 +265,13 @@ function updateEntities(dt) {
 function render(dt) {
     // Render the player if the game isn't over
 
-
     checkCollisions(dt);
-    // ctx.fillStyle = grassPattern;
-    // ctx.fillRect(92, canvas.height-96, canvas.width, 96);
-    // ctx.fillStyle = grassStartPattern;
-    // ctx.fillRect(0, canvas.height-96, 92, 96);
-
-    //renderGrass();
 
     renderEntity(player,actions,1);
 
     renderEntity(enemy,enemy_actions,0);
 
 }
-
-// function renderGrass() {
-//     for(var c_width = 0; c_width < canvas.width; c_width+=96){
-//         ctx.drawImage(im, c_width, canvas.height-96);
-//     }
-// }
 
 var bar_start,
     bar_text_start;
@@ -255,18 +282,20 @@ function renderEntity(entity,actions,type) {
     entity[actions].render(ctx);
     ctx.restore();
     bar_start = 20;
-    bar_text_start = 160;
+    bar_text_start = 20;
     if( !type){
         bar_start = canvas.width-220;
-        bar_text_start = canvas.width-215;
+        bar_text_start = canvas.width-220;
     }
     //health
     ctx.fillStyle = entity.color;
-    ctx.fillRect(bar_start, 20, entity.health*2, 25);
+    ctx.fillRect(bar_start, 35, entity.health*2, 25);
     //health text
     ctx.font = "21px Comic Sans MS";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(''+entity.health+'%',bar_text_start,41);
+    ctx.fillStyle = "#000000";
+    if( entity.health !=0 ){
+        ctx.fillText(''+entity.health+'%',bar_text_start,30);
+    }
 }
 
 init();

@@ -1,10 +1,10 @@
-/* line 120, idle/*.png */
+/* line 112, idle/*.png */
 .idle-sprite {
-  background-image: url('/img/idle-sf9fc39f012.png');
+  background-image: url('/img/idle-s2d400021a0.png');
   background-repeat: no-repeat;
 }
 
-/* line 8, ../sass/style.scss */
+/* line 9, ../sass/style.scss */
 canvas {
   border: 1px solid #000;
   position: absolute;
