@@ -16,10 +16,23 @@ canvas.width = 800;
 canvas.height = 480;
 document.body.appendChild(canvas);
 
+//initialize
+var gameOver = true;
+function init() {
+    lastTime = Date.now();
+
+    document.getElementById('start').addEventListener('click', function() {
+        start();
+    });
+
+    //start();
+    main();
+}
+
 // The main game loop
 var lastTime;
 function main() {
-   // ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
 
@@ -34,17 +47,26 @@ function main() {
 
 }
 
-function init() {
-    lastTime = Date.now();
-
-    document.getElementById('start').addEventListener('click', function() {
-        start();
-    });
-
-    //start();
-    main();
+//refresh all function
+function start(){
+    document.getElementById('start-overlay').style.display = 'none';
+    player.health = 100;
+    actions = 'stay';
+    player.pos = [20, 262];
+    enemy.pos = [canvas.width, 280];
+    enemy.health = 100;
+    gameOver = false;
 }
 
+//gameOver function
+function finish(){
+    document.getElementById('start-overlay').style.display = 'block';
+    document.getElementById('message-start').style.display = 'none';
+    document.getElementById('message-end').style.display = 'block';
+    gameOver = true;
+}
+
+//draw all background
 function draw_back() {
     //background color
     ctx.fillStyle = '#9fc5ed';
@@ -83,13 +105,14 @@ tree_fallen.src = 'img/background/tree-fallen.png';
 tree2.src = 'img/background/tree2.png';
 mushrooms.src = 'img/background/mushrooms.png';
 
-// Game state
+// player object
 var player = {
     pos: [20, 262],
     health: 100,
     color: '#481cd5',
     speed: 160,
     action: 'stay',
+    bar_start: 20,
     stay: new Sprite('img/hero/stay.png', [0, 0], [83, 141], 6, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
     walk_right: new Sprite('img/hero/walk.png', [15, 0], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     walk_left: new Sprite('img/hero/walk.png', [0, 131], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -101,41 +124,27 @@ var player = {
 };
 var lastAttack = Date.now(),
     actions = player.action,
-    PlayerDeathTime,
-    gameOver = true;
+    PlayerDeathTime;
 
+//enemy object
 var enemy = {
     pos: [canvas.width, 280],
-    color: '#ff0000',
     health: 100,
+    color: '#ff0000',
     speed: 80,
     action: 'walk',
     state : 1,
+    bar_start: canvas.width-220,
     stay: new Sprite('img/enemy/skeleton.png', [0, -10], [106, 110], 4, [0,1, 2, 3]),
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
     damage: new Sprite('img/enemy/skeleton.png', [0, 230], [109, 135], 4, [0,1],'vertical'),
     die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true,deathTime)
 };
+var lastEnemyAttack = Date.now(),
+    enemy_actions = enemy.action,
+    deathTime;
 
-var enemy_actions = enemy.action,
-    deathTime,
-    lastEnemyAttack = Date.now();
-
-function finish(){
-    document.getElementById('start-overlay').style.display = 'block';
-    gameOver = true;
-}
-
-function start(){
-    document.getElementById('start-overlay').style.display = 'none';
-    player.health = 100;
-    actions = 'stay';
-    player.pos = [20, 262];
-    enemy.pos = [canvas.width, 280];
-    enemy.health = 100;
-    gameOver = false;
-}
 
 function update(dt) {
 
@@ -156,7 +165,7 @@ function checkCollisions(dt) {
     playerActions();
 
     //check for text
-    checkText();
+    checkAllText();
 
     //check enemy spawn
     checkEnemySpawn();
@@ -175,9 +184,9 @@ function playerActions() {
 
 function enemyActions(dt) {
     //check for Player Health
-    if( player.health != 0 ){
+    if( player.health !== 0 ){
         //check for enemy health
-        if( enemy.health != 0 ){
+        if( enemy.health !== 0 ){
             if( !gameOver ){
                 //check for enemy position
                 if( player.pos[0] + 70 < enemy.pos[0] ){
@@ -212,19 +221,33 @@ function enemyActions(dt) {
         enemy_actions = 'stay';
     }
 }
-function checkText() {
+function checkAllText() {
     if( !gameOver ){
         if( input.isDown('LEFT') && player.pos[0] < 21 ){
             ctx.font = "20px Comic Sans MS";
             ctx.fillStyle = "#ff0000";
             ctx.fillText("I can`t leave!",60,280);
         }
+        //player health
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.bar_start, 35, player.health*2, 25);
+        //enemy health
+        ctx.fillStyle = enemy.color;
+        ctx.fillRect(enemy.bar_start, 35, enemy.health*2, 25);
+        //bars text
+        ctx.font = "21px Comic Sans MS";
+        ctx.fillStyle = "#000000";
+        if( player.health !==0 ){
+            ctx.fillText(''+player.health+'%',player.bar_start,30);
+        }
+        if( enemy.health !==0 ){
+            ctx.fillText(''+enemy.health+'%',enemy.bar_start,30);
+        }
     }
-
 }
+//enemy spawn timer
 function checkEnemySpawn() {
     if( !enemy.state ){
-        //
         if( Date.now() - deathTime > 3000 ){
             enemy.pos[0] = canvas.width;
             enemy.health = 100;
@@ -264,7 +287,7 @@ function handleInput(dt) {
     if(input.isDown('SPACE') ){
         actions = 'attack';
         if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
-            if( enemy.health != 0 ){
+            if( enemy.health !== 0 ){
                 enemy.health -=25;
             }
             lastAttack = Date.now();
@@ -285,32 +308,17 @@ function render(dt) {
 
     checkCollisions(dt);
 
-    renderEntity(player,actions,1);
+    renderEntity(player,actions);
 
-    renderEntity(enemy,enemy_actions,0);
+    renderEntity(enemy,enemy_actions);
 
 }
-
-var bar_start;
 
 function renderEntity(entity,actions,type) {
     ctx.save();
     ctx.translate(entity.pos[0], entity.pos[1]);
     entity[actions].render(ctx);
     ctx.restore();
-    bar_start = 20;
-    if( !type){
-        bar_start = canvas.width-220;
-    }
-    //health
-    ctx.fillStyle = entity.color;
-    ctx.fillRect(bar_start, 35, entity.health*2, 25);
-    //health text
-    ctx.font = "21px Comic Sans MS";
-    ctx.fillStyle = "#000000";
-    if( entity.health !=0 ){
-        ctx.fillText(''+entity.health+'%',bar_start,30);
-    }
 }
 
 init();

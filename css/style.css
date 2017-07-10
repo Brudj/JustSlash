@@ -22,12 +22,15 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.9);
   z-index: 1;
+  -moz-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  -webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
-
-/* line 27, ../sass/style.scss */
-#start {
+/* line 26, ../sass/style.scss */
+#start-overlay-content {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -35,11 +38,27 @@ canvas {
   -ms-transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
+  z-index: 2;
+  text-align: center;
+}
+
+/* line 37, ../sass/style.scss */
+#message-start, #message-end {
+  color: #ffffff;
+  font-size: 30px;
+  margin: 0 0 25px;
+}
+/* line 42, ../sass/style.scss */
+#message-end {
+  display: none;
+}
+
+/* line 47, ../sass/style.scss */
+#start {
   -moz-transition: all 0.3s ease-in-out;
   -o-transition: all 0.3s ease-in-out;
   -webkit-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
-  z-index: 2;
   padding: 13px 15px;
   border: 3px solid #ffffff;
   color: #ffffff;
@@ -47,8 +66,9 @@ canvas {
   text-align: center;
   min-width: 160px;
   text-decoration: none;
+  display: inline-block;
 }
-/* line 41, ../sass/style.scss */
+/* line 57, ../sass/style.scss */
 #start:hover, #start:focus {
   border: 3px solid red;
   color: red;
