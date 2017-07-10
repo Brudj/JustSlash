@@ -106,6 +106,7 @@ var enemy = {
     stay: new Sprite('img/enemy/skeleton.png', [0, -10], [106, 110], 4, [0,1, 2, 3]),
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
+    damage: new Sprite('img/enemy/skeleton.png', [0, 230], [109, 135], 4, [0,1],'vertical'),
     die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0, 1, 2, 3, 4],'horizontal',true)
 };
 
@@ -133,45 +134,50 @@ function checkCollisions(dt) {
 
     //check enemy spawn
     checkEnemySpawn();
-
 }
 
 function playerActions() {
     if (player.health == 0) {
-        actions = 'death';
+       if ( actions != 'death' ){
+           actions = 'death';
+       }
     }
 }
 
 function enemyActions(dt) {
     //check for Player Health
-    if( player.health == 0 ){
-        enemy_actions = 'stay';
-    } else{
-        //check for enemy position
-        if( player.pos[0] + 70 < enemy.pos[0] ){
-            enemy_actions = 'walk';
-            enemy.pos[0] -= enemy.speed * dt;
-        } else {
-            enemy_actions = 'attack';
-            if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
-                //check for health
-                if( player.health != 0 ){
-                    //check for state
-                    if( enemy.state ){
-                        player.health -=10;
-                        lastEnemyAttack = Date.now();
+    if( player.health != 0 ){
+        //check for enemy health
+        if( enemy.health != 0 ){
+            //check for enemy position
+            if( player.pos[0] + 70 < enemy.pos[0] ){
+                enemy_actions = 'walk';
+                enemy.pos[0] -= enemy.speed * dt;
+            } else {
+                if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
+                    //check for player attack
+                    if( input.isDown('SPACE') ){
+                        enemy_actions = 'damage';
+                    } else{
+                        //check for health
+                        if( player.health != 0 ){
+                            enemy_actions = 'attack';
+                            player.health -=10;
+                            lastEnemyAttack = Date.now();
+                        }
                     }
+
                 }
             }
+        } else{
+            enemy_actions = 'die';
+            if( enemy.state ){
+                deathTime = Date.now();
+            }
+            enemy.state = 0;
         }
-    }
-    //check for enemy health
-    if( enemy.health == 0 ){
-        enemy_actions = 'die';
-        if( enemy.state ){
-            deathTime = Date.now();
-        }
-        enemy.state = 0;
+    } else{
+        enemy_actions = 'stay';
     }
 }
 function checkText() {
