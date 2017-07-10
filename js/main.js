@@ -91,10 +91,12 @@ var player = {
     run_right: new Sprite('img/hero/run.png', [0, 131], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     run_left: new Sprite('img/hero/run.png', [0, 0], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    death: new Sprite('img/hero/death.png', [0, 0], [163, 131], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8],'horizontal',true)
+    damage: new Sprite('img/hero/hit.png', [0, 0], [113, 131], 3, [0,1]),
+    death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true)
 };
-var lastAttack = Date.now();
-var actions = player.action;
+var lastAttack = Date.now(),
+    actions = player.action,
+    PlayerDeathTime;
 
 var enemy = {
     pos: [canvas.width-150, 280],
@@ -107,7 +109,7 @@ var enemy = {
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
     damage: new Sprite('img/enemy/skeleton.png', [0, 230], [109, 135], 4, [0,1],'vertical'),
-    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0, 1, 2, 3, 4],'horizontal',true)
+    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true,deathTime)
 };
 
 var enemy_actions = enemy.action,
@@ -139,6 +141,7 @@ function checkCollisions(dt) {
 function playerActions() {
     if (player.health == 0) {
        if ( actions != 'death' ){
+           PlayerDeathTime = Date.now();
            actions = 'death';
        }
     }
@@ -162,6 +165,7 @@ function enemyActions(dt) {
                         //check for health
                         if( player.health != 0 ){
                             enemy_actions = 'attack';
+                            actions = 'damage';
                             player.health -=10;
                             lastEnemyAttack = Date.now();
                         }
@@ -170,8 +174,8 @@ function enemyActions(dt) {
                 }
             }
         } else{
-            enemy_actions = 'die';
             if( enemy.state ){
+                enemy_actions = 'die';
                 deathTime = Date.now();
             }
             enemy.state = 0;
@@ -189,8 +193,9 @@ function checkText() {
 }
 function checkEnemySpawn() {
     if( !enemy.state ){
-        enemy.pos[0] = canvas.width;
+        //
         if( Date.now() - deathTime > 3000 ){
+            enemy.pos[0] = canvas.width;
             enemy.health = 100;
             enemy.state = 1;
         }

@@ -1,5 +1,5 @@
 (function() {
-    function Sprite(url, pos, size, speed, frames, dir, once) {
+    function Sprite(url, pos, size, speed, frames, dir, once,stay,deathTime) {
         this.pos = pos;
         this.size = size;
         this.speed = typeof speed === 'number' ? speed : 0;
@@ -8,6 +8,8 @@
         this.url = url;
         this.dir = dir || 'horizontal';
         this.once = once;
+        this.stay = stay || 0;
+        this.deathTime = deathTime;
     };
 
     Sprite.prototype = {
@@ -24,8 +26,15 @@
                 frame = this.frames[idx % max];
 
                 if(this.once && idx >= max) {
+                    if( this.stay ){
+                        frame = max-1;
+                    } else{
+                        return;
+                    }
+                    if( Date.now() - this.deathTime > 3000){
+                        this._index = 0;
+                    }
                     this.done = true;
-                    return;
                 }
             }
             else {
