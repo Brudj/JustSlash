@@ -1,5 +1,5 @@
 (function() {
-    function Sprite(url, pos, size, speed, frames, dir, once,stay,deathTime) {
+    function Sprite(url, pos, size, speed, frames, dir, once, stay, deathTime, player) {
         this.pos = pos;
         this.size = size;
         this.speed = typeof speed === 'number' ? speed : 0;
@@ -9,7 +9,7 @@
         this.dir = dir || 'horizontal';
         this.once = once;
         this.stay = stay || 0;
-        this.deathTime = deathTime;
+        this.player = player || 0;
     };
 
     Sprite.prototype = {
@@ -31,8 +31,11 @@
                     } else{
                         return;
                     }
-                    if( Date.now() - this.deathTime > 3000){
-                        this._index = 0;
+                    //console.log(deathTime);
+                    if( !this.player ) {
+                        if (Date.now() - deathTime > 2900) {
+                            this._index = 0;
+                        }
                     }
                     this.done = true;
                 }

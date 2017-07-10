@@ -19,7 +19,7 @@ document.body.appendChild(canvas);
 // The main game loop
 var lastTime;
 function main() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+   // ctx.clearRect(0, 0, canvas.width, canvas.height);
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
 
@@ -37,6 +37,11 @@ function main() {
 function init() {
     lastTime = Date.now();
 
+    document.getElementById('start').addEventListener('click', function() {
+        start();
+    });
+
+    //start();
     main();
 }
 
@@ -92,14 +97,15 @@ var player = {
     run_left: new Sprite('img/hero/run.png', [0, 0], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     damage: new Sprite('img/hero/hit.png', [0, 0], [113, 131], 3, [0,1]),
-    death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true)
+    death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,true)
 };
 var lastAttack = Date.now(),
     actions = player.action,
-    PlayerDeathTime;
+    PlayerDeathTime,
+    gameOver = true;
 
 var enemy = {
-    pos: [canvas.width-150, 280],
+    pos: [canvas.width, 280],
     color: '#ff0000',
     health: 100,
     speed: 80,
@@ -116,16 +122,34 @@ var enemy_actions = enemy.action,
     deathTime,
     lastEnemyAttack = Date.now();
 
+function finish(){
+    document.getElementById('start-overlay').style.display = 'block';
+    gameOver = true;
+}
+
+function start(){
+    document.getElementById('start-overlay').style.display = 'none';
+    player.health = 100;
+    actions = 'stay';
+    player.pos = [20, 262];
+    enemy.pos = [canvas.width, 280];
+    enemy.health = 100;
+    gameOver = false;
+}
 
 function update(dt) {
 
     updateEntities(dt);
 
-    handleInput(dt);
+    if( !gameOver ){
+        handleInput(dt);
+    }
+
 }
 
 function checkCollisions(dt) {
     //all enemy logic and actions
+
     enemyActions(dt);
 
     //all player actions
@@ -136,6 +160,7 @@ function checkCollisions(dt) {
 
     //check enemy spawn
     checkEnemySpawn();
+
 }
 
 function playerActions() {
@@ -144,6 +169,7 @@ function playerActions() {
            PlayerDeathTime = Date.now();
            actions = 'death';
        }
+        finish();
     }
 }
 
@@ -152,25 +178,27 @@ function enemyActions(dt) {
     if( player.health != 0 ){
         //check for enemy health
         if( enemy.health != 0 ){
-            //check for enemy position
-            if( player.pos[0] + 70 < enemy.pos[0] ){
-                enemy_actions = 'walk';
-                enemy.pos[0] -= enemy.speed * dt;
-            } else {
-                if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
-                    //check for player attack
-                    if( input.isDown('SPACE') ){
-                        enemy_actions = 'damage';
-                    } else{
-                        //check for health
-                        if( player.health != 0 ){
-                            enemy_actions = 'attack';
-                            actions = 'damage';
-                            player.health -=10;
-                            lastEnemyAttack = Date.now();
+            if( !gameOver ){
+                //check for enemy position
+                if( player.pos[0] + 70 < enemy.pos[0] ){
+                    enemy_actions = 'walk';
+                    enemy.pos[0] -= enemy.speed * dt;
+                } else {
+                    if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
+                        //check for player attack
+                        if( input.isDown('SPACE') ){
+                            enemy_actions = 'damage';
+                        } else{
+                            //check for health
+                            if( player.health != 0 ){
+                                enemy_actions = 'attack';
+                                actions = 'damage';
+                                player.health -=10;
+                                lastEnemyAttack = Date.now();
+                            }
                         }
-                    }
 
+                    }
                 }
             }
         } else{
@@ -185,11 +213,14 @@ function enemyActions(dt) {
     }
 }
 function checkText() {
-    if( input.isDown('LEFT') && player.pos[0] < 21 ){
-        ctx.font = "20px Comic Sans MS";
-        ctx.fillStyle = "#ff0000";
-        ctx.fillText("I can`t leave!",60,280);
+    if( !gameOver ){
+        if( input.isDown('LEFT') && player.pos[0] < 21 ){
+            ctx.font = "20px Comic Sans MS";
+            ctx.fillStyle = "#ff0000";
+            ctx.fillText("I can`t leave!",60,280);
+        }
     }
+
 }
 function checkEnemySpawn() {
     if( !enemy.state ){
@@ -246,7 +277,6 @@ function updateEntities(dt) {
     player[actions].update(dt);
 
     enemy[enemy_actions].update(dt);
-
 }
 
 // Draw everything
