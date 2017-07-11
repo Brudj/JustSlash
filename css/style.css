@@ -1,10 +1,10 @@
 /* line 112, idle/*.png */
 .idle-sprite {
-  background-image: url('/img/idle-s2d400021a0.png');
+  background-image: url('/img/idle-s1212b69df3.png');
   background-repeat: no-repeat;
 }
 
-/* line 10, ../sass/style.scss */
+/* line 9, ../sass/style.scss */
 canvas {
   position: absolute;
   left: 50%;
@@ -15,7 +15,7 @@ canvas {
   transform: translate(-50%, -50%);
 }
 
-/* line 17, ../sass/style.scss */
+/* line 16, ../sass/style.scss */
 #start-overlay {
   position: absolute;
   top: 0;
@@ -29,7 +29,7 @@ canvas {
   -webkit-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
 }
-/* line 26, ../sass/style.scss */
+/* line 25, ../sass/style.scss */
 #start-overlay-content {
   position: absolute;
   left: 50%;
@@ -42,18 +42,31 @@ canvas {
   text-align: center;
 }
 
-/* line 37, ../sass/style.scss */
-#message-start, #message-end {
+/* line 35, ../sass/style.scss */
+#message {
+  margin-bottom: 40px;
+}
+/* line 38, ../sass/style.scss */
+#message-start h4, #message-end h4 {
   color: #ffffff;
   font-size: 30px;
   margin: 0 0 25px;
 }
-/* line 42, ../sass/style.scss */
+/* line 43, ../sass/style.scss */
+#message-start p, #message-end p {
+  color: #ffffff;
+  margin-bottom: 5px;
+  font-size: 18px;
+}
+/* line 49, ../sass/style.scss */
 #message-end {
+  color: red;
+  font-size: 36px;
   display: none;
+  margin: 0 0 25px;
 }
 
-/* line 47, ../sass/style.scss */
+/* line 57, ../sass/style.scss */
 #start {
   -moz-transition: all 0.3s ease-in-out;
   -o-transition: all 0.3s ease-in-out;
@@ -67,8 +80,9 @@ canvas {
   min-width: 160px;
   text-decoration: none;
   display: inline-block;
+  margin-top: 25px;
 }
-/* line 57, ../sass/style.scss */
+/* line 68, ../sass/style.scss */
 #start:hover, #start:focus {
   border: 3px solid red;
   color: red;

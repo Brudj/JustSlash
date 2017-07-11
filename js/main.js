@@ -53,7 +53,7 @@ function start(){
     player.health = 100;
     actions = 'stay';
     player.pos = [20, 262];
-    enemy.pos = [canvas.width, 280];
+    enemy.pos = [canvas.width-150, 280];
     enemy.health = 100;
     gameOver = false;
 }
@@ -109,6 +109,7 @@ mushrooms.src = 'img/background/mushrooms.png';
 var player = {
     pos: [20, 262],
     health: 100,
+    mana : 100,
     color: '#481cd5',
     speed: 160,
     action: 'stay',
@@ -119,6 +120,7 @@ var player = {
     run_right: new Sprite('img/hero/run.png', [0, 131], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     run_left: new Sprite('img/hero/run.png', [0, 0], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    spell: new Sprite('img/hero/summon.png', [0, 0], [111.44, 131], 8, [8, 7, 6, 5, 4, 3, 2, 1, 0]),
     damage: new Sprite('img/hero/hit.png', [0, 0], [113, 131], 3, [0,1]),
     death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,true)
 };
@@ -145,6 +147,10 @@ var lastEnemyAttack = Date.now(),
     enemy_actions = enemy.action,
     deathTime;
 
+var explosions = {
+    pos: [enemy.pos[0], 262],
+    explosions : new Sprite('img/enemy/skeleton.png', [0, 510], [109, 110], 4, [0,1])
+};
 
 function update(dt) {
 
@@ -156,7 +162,55 @@ function update(dt) {
 
 }
 
-function checkCollisions(dt) {
+function handleInput(dt) {
+    if(input.isDown('DOWN')) {
+        //player.pos[1] += playerSpeed * dt;
+    }
+
+    if(input.isDown('UP')) {
+        actions = 'spell';
+    }
+
+    if(input.isDown('LEFT')) {
+        if(player.pos[0] < 21) {
+            player.pos[0] = 20;
+            actions = 'stay';
+        } else{
+            player.pos[0] -= player.speed * dt;
+            actions = 'walk_left';
+        }
+    }
+
+    if(input.isDown('RIGHT')) {
+        if( enemy.pos[0] - player.pos[0] > 70 ){
+            player.pos[0] += player.speed * dt;
+            actions = 'walk_right';
+        } else{
+            actions = 'stay';
+        }
+    }
+
+    if(input.isDown('SPACE') ){
+        actions = 'attack';
+        if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
+            if( enemy.health > 0 ){
+                enemy.health -=25;
+            }
+            lastAttack = Date.now();
+        }
+    }
+}
+
+function updateEntities(dt) {
+    // Update the player sprite animation
+    player[actions].update(dt);
+
+    enemy[enemy_actions].update(dt);
+
+    explosions.explosions.update(dt);
+}
+
+function checkAll(dt) {
     //all enemy logic and actions
 
     enemyActions(dt);
@@ -172,26 +226,43 @@ function checkCollisions(dt) {
 
 }
 
+//all players actions
 function playerActions() {
-    if (player.health == 0) {
-       if ( actions != 'death' ){
-           PlayerDeathTime = Date.now();
-           actions = 'death';
-       }
+    //check for player health
+    if (player.health > 0) {
+        //check for mana
+        if( player.mana < 100 && !input.isDown('UP') ){
+            player.mana +=0.05;
+        }
+        //check for spell use
+        if( input.isDown('UP') && player.mana > 50 && enemy.state !== 0 && Date.now() - lastAttack > 10 ){
+            enemy.health -=2;
+            player.mana -=1;
+            lastAttack = Date.now();
+            renderEntity(explosions,'explosions');
+           // console.log(enemy.pos[0]);
+          //  explosions.explosions.render(ctx);
+        }
+    } else{
+        if ( actions != 'death' ){
+            PlayerDeathTime = Date.now();
+            actions = 'death';
+        }
         finish();
     }
 }
 
 function enemyActions(dt) {
     //check for Player Health
-    if( player.health !== 0 ){
+    if( player.health > 0 ){
         //check for enemy health
-        if( enemy.health !== 0 ){
+        if( enemy.health > 0 ){
             if( !gameOver ){
                 //check for enemy position
                 if( player.pos[0] + 70 < enemy.pos[0] ){
                     enemy_actions = 'walk';
-                    enemy.pos[0] -= enemy.speed * dt;
+                    explosions.pos[0] = enemy.pos[0];
+                     enemy.pos[0] -= enemy.speed * dt;
                 } else {
                     if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
                         //check for player attack
@@ -228,20 +299,27 @@ function checkAllText() {
             ctx.fillStyle = "#ff0000";
             ctx.fillText("I can`t leave!",60,280);
         }
-        //player health
-        ctx.fillStyle = player.color;
-        ctx.fillRect(player.bar_start, 35, player.health*2, 25);
-        //enemy health
-        ctx.fillStyle = enemy.color;
-        ctx.fillRect(enemy.bar_start, 35, enemy.health*2, 25);
-        //bars text
-        ctx.font = "21px Comic Sans MS";
+
+        ctx.font = "18px Comic Sans MS";
         ctx.fillStyle = "#000000";
-        if( player.health !==0 ){
+
+        //player text
+        if( player.health > 0 ){
+            //player health
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(player.bar_start, 35, player.health*2, 25);
             ctx.fillText(''+player.health+'%',player.bar_start,30);
+            //player mana
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.bar_start, 65, player.mana*2, 15);
+            ctx.fillText(''+Math.round(player.mana)+'%',player.bar_start,100);
         }
-        if( enemy.health !==0 ){
+
+        //enemy text
+        if( enemy.health > 0 ){
+            ctx.fillStyle = '#ff0000';
             ctx.fillText(''+enemy.health+'%',enemy.bar_start,30);
+            ctx.fillRect(enemy.bar_start, 35, enemy.health*2, 25);
         }
     }
 }
@@ -256,65 +334,21 @@ function checkEnemySpawn() {
     }
 }
 
-function handleInput(dt) {
-    if(input.isDown('DOWN') || input.isDown('s')) {
-        //player.pos[1] += playerSpeed * dt;
-    }
-
-    if(input.isDown('UP') || input.isDown('w')) {
-        //player.pos[1] -= playerSpeed * dt;
-    }
-
-    if(input.isDown('LEFT') || input.isDown('a')) {
-        if(player.pos[0] < 21) {
-            player.pos[0] = 20;
-            actions = 'stay';
-        } else{
-            player.pos[0] -= player.speed * dt;
-            actions = 'walk_left';
-        }
-    }
-
-    if(input.isDown('RIGHT') || input.isDown('d')) {
-        if( enemy.pos[0] - player.pos[0] > 70 ){
-            player.pos[0] += player.speed * dt;
-            actions = 'walk_right';
-        } else{
-            actions = 'stay';
-        }
-    }
-
-    if(input.isDown('SPACE') ){
-        actions = 'attack';
-        if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
-            if( enemy.health !== 0 ){
-                enemy.health -=25;
-            }
-            lastAttack = Date.now();
-        }
-    }
-}
-
-function updateEntities(dt) {
-    // Update the player sprite animation
-    player[actions].update(dt);
-
-    enemy[enemy_actions].update(dt);
-}
 
 // Draw everything
 function render(dt) {
     // Render the player if the game isn't over
 
-    checkCollisions(dt);
-
     renderEntity(player,actions);
 
     renderEntity(enemy,enemy_actions);
 
+    checkAll(dt);
+
+
 }
 
-function renderEntity(entity,actions,type) {
+function renderEntity(entity,actions) {
     ctx.save();
     ctx.translate(entity.pos[0], entity.pos[1]);
     entity[actions].render(ctx);
