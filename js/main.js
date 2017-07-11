@@ -122,7 +122,7 @@ var player = {
     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     spell: new Sprite('img/hero/summon.png', [0, 0], [111.44, 131], 8, [8, 7, 6, 5, 4, 3, 2, 1, 0]),
     damage: new Sprite('img/hero/hit.png', [0, 0], [113, 131], 3, [0,1]),
-    death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,true)
+    death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,1)
 };
 var lastAttack = Date.now(),
     actions = player.action,
@@ -143,6 +143,7 @@ var enemy = {
     damage: new Sprite('img/enemy/skeleton.png', [0, 230], [109, 135], 4, [0,1],'vertical'),
     die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true,deathTime)
 };
+
 var lastEnemyAttack = Date.now(),
     enemy_actions = enemy.action,
     deathTime;
@@ -160,6 +161,15 @@ function update(dt) {
         handleInput(dt);
     }
 
+}
+
+function updateEntities(dt) {
+    // Update the player sprite animation
+    player[actions].update(dt);
+
+    enemy[enemy_actions].update(dt);
+
+    explosions.explosions.update(dt);
 }
 
 function handleInput(dt) {
@@ -182,7 +192,7 @@ function handleInput(dt) {
     }
 
     if(input.isDown('RIGHT')) {
-        if( enemy.pos[0] - player.pos[0] > 70 ){
+        if( enemy.pos[0] - player.pos[0] > 70){
             player.pos[0] += player.speed * dt;
             actions = 'walk_right';
         } else{
@@ -199,15 +209,6 @@ function handleInput(dt) {
             lastAttack = Date.now();
         }
     }
-}
-
-function updateEntities(dt) {
-    // Update the player sprite animation
-    player[actions].update(dt);
-
-    enemy[enemy_actions].update(dt);
-
-    explosions.explosions.update(dt);
 }
 
 function checkAll(dt) {
@@ -235,7 +236,7 @@ function playerActions() {
             player.mana +=0.05;
         }
         //check for spell use
-        if( input.isDown('UP') && player.mana > 50 && enemy.state !== 0 && Date.now() - lastAttack > 10 ){
+        if( input.isDown('UP') && player.mana > 0 && enemy.state !== 0 && Date.now() - lastAttack > 10 ){
             enemy.health -=2;
             player.mana -=1;
             lastAttack = Date.now();
@@ -326,7 +327,7 @@ function checkAllText() {
 //enemy spawn timer
 function checkEnemySpawn() {
     if( !enemy.state ){
-        if( Date.now() - deathTime > 3000 ){
+        if( Date.now() - deathTime > 2900 ){
             enemy.pos[0] = canvas.width;
             enemy.health = 100;
             enemy.state = 1;

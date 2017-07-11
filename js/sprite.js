@@ -1,5 +1,5 @@
 (function() {
-    function Sprite(url, pos, size, speed, frames, dir, once, stay, deathTime, player) {
+    function Sprite(url, pos, size, speed, frames, dir, once, stay, deathTime, type) {
         this.pos = pos;
         this.size = size;
         this.speed = typeof speed === 'number' ? speed : 0;
@@ -9,7 +9,7 @@
         this.dir = dir || 'horizontal';
         this.once = once;
         this.stay = stay || 0;
-        this.player = player || 0;
+        this.type = type || 0;
     };
 
     Sprite.prototype = {
@@ -24,15 +24,11 @@
                 var max = this.frames.length;
                 var idx = Math.floor(this._index);
                 frame = this.frames[idx % max];
-
                 if(this.once && idx >= max) {
                     if( this.stay ){
                         frame = max-1;
-                    } else{
-                        return;
                     }
-                    //console.log(deathTime);
-                    if( !this.player ) {
+                    if( !this.type ) {
                         if (Date.now() - deathTime > 2900) {
                             this._index = 0;
                         }
@@ -43,7 +39,6 @@
             else {
                 frame = 0;
             }
-
 
             var x = this.pos[0];
             var y = this.pos[1];
