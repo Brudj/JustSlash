@@ -50,7 +50,7 @@ canvas {
 #message-start h4, #message-end h4 {
   color: #ffffff;
   font-size: 30px;
-  margin: 0 0 25px;
+  margin: 0 0 5px;
 }
 /* line 43, ../sass/style.scss */
 #message-start p, #message-end p {
@@ -58,7 +58,12 @@ canvas {
   margin-bottom: 5px;
   font-size: 18px;
 }
-/* line 49, ../sass/style.scss */
+/* line 50, ../sass/style.scss */
+#message-start div {
+  display: inline-block;
+  text-align: left;
+}
+/* line 55, ../sass/style.scss */
 #message-end {
   color: red;
   font-size: 36px;
@@ -66,7 +71,7 @@ canvas {
   margin: 0 0 25px;
 }
 
-/* line 57, ../sass/style.scss */
+/* line 63, ../sass/style.scss */
 #start {
   -moz-transition: all 0.3s ease-in-out;
   -o-transition: all 0.3s ease-in-out;
@@ -82,7 +87,7 @@ canvas {
   display: inline-block;
   margin-top: 25px;
 }
-/* line 68, ../sass/style.scss */
+/* line 74, ../sass/style.scss */
 #start:hover, #start:focus {
   border: 3px solid red;
   color: red;

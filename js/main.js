@@ -73,38 +73,75 @@ function draw_back() {
     ctx.fillStyle = '#9fc5ed';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     //grass start
-    ctx.drawImage(grass_start, 0, canvas.height-96);
+    //ctx.drawImage(grass_start, 0, canvas.height-96);
     //all grass
-    for(var c_width = 92; c_width < canvas.width; c_width+=96){
+    var c_width = 92;
+    if( input.isDown('RIGHT') && player.pos[0] > canvas.width / 2 ){
+        c_width = 0;
+    }
+    for( c_width; c_width < canvas.width; c_width+=96){
         ctx.drawImage(grass, c_width, canvas.height-96);
     }
     //tree
-    ctx.drawImage(tree, canvas.width-300, canvas.height-338);
-    //small tree
-    ctx.drawImage(tree_small, 200, canvas.height-230);
-    //fallen tree
-    ctx.drawImage(tree_fallen, 400, canvas.height-125);
-    //fallen tree 2
-    ctx.drawImage(tree2, 320, canvas.height-128);
-    //mushrooms
-    ctx.drawImage(mushrooms, 190, canvas.height-118);
-    ctx.drawImage(mushrooms, canvas.width-200, canvas.height-118);
+    //ctx.drawImage(tree, canvas.width-300, canvas.height-338);
+    ////small tree
+    //ctx.drawImage(tree_small, 200, canvas.height-230);
+    ////fallen tree
+    //ctx.drawImage(tree_fallen, 400, canvas.height-125);
+    ////fallen tree 2
+    //ctx.drawImage(tree2, 320, canvas.height-128);
+    ////mushrooms
+    //ctx.drawImage(mushrooms, 190, canvas.height-118);
+    //ctx.drawImage(mushrooms, canvas.width-200, canvas.height-118);
 }
 
-var grass_start = new Image();
+var background = {
+    grass_start : {
+        count: 1,
+        pos : [0,canvas.height-96],
+        src : 'img/background/grass-start.png'
+    },
+    tree : {
+        count: 1,
+        pos : [canvas.width - Math.floor((Math.random() * canvas.width) + 1),canvas.height-338],
+        src : 'img/background/tree.png'
+    },
+    tree_small : {
+        count: 2,
+        pos : [canvas.width - Math.floor((Math.random() * canvas.width) + 1),canvas.height-230],
+        src : 'img/background/tree-small.png'
+    },
+    tree_fallen : {
+        count: 1,
+        pos : [canvas.width - Math.floor((Math.random() * canvas.width) + 1),canvas.height-125],
+        src : 'img/background/tree-fallen.png'
+    },
+    tree2 : {
+        count: 1,
+        pos : [canvas.width - Math.floor((Math.random() * canvas.width) + 1),canvas.height-128],
+        src : 'img/background/tree2.png'
+    },
+    mushrooms : {
+        count: 3,
+        pos : [canvas.width - Math.floor((Math.random() * canvas.width) + 1),canvas.height-118],
+        src : 'img/background/mushrooms.png'
+    }
+};
+
+//var grass_start = new Image();
 var grass = new Image();
-var tree = new Image();
-var tree_small = new Image();
-var tree_fallen = new Image();
-var tree2 = new Image();
-var mushrooms = new Image();
-grass_start.src = 'img/background/grass-start.png';
+//var tree = new Image();
+//var tree_small = new Image();
+//var tree_fallen = new Image();
+//var tree2 = new Image();
+//var mushrooms = new Image();
+//grass_start.src = 'img/background/grass-start.png';
 grass.src = 'img/background/grass.png';
-tree.src = 'img/background/tree.png';
-tree_small.src = 'img/background/tree-small.png';
-tree_fallen.src = 'img/background/tree-fallen.png';
-tree2.src = 'img/background/tree2.png';
-mushrooms.src = 'img/background/mushrooms.png';
+//tree.src = 'img/background/tree.png';
+//tree_small.src = 'img/background/tree-small.png';
+//tree_fallen.src = 'img/background/tree-fallen.png';
+//tree2.src = 'img/background/tree2.png';
+//mushrooms.src = 'img/background/mushrooms.png';
 
 // player object
 var player = {
@@ -156,6 +193,8 @@ var explosions = {
 
 function update(dt) {
 
+    updateBg(dt);
+
     updateEntities(dt);
 
     if( !gameOver ){
@@ -164,12 +203,30 @@ function update(dt) {
 
 }
 
+function updateBg(dt){
+
+    if( input.isDown('RIGHT') && player.pos[0] > canvas.width / 2 ){
+        //check for enemy health and position
+        if( enemy.pos[0] - player.pos[0] > 70 || enemy.health <= 0 ){
+            if( enemy.health <= 0 ){
+                enemy.pos[0] -= player.speed * dt;
+            }
+            for (var key in background) {
+                background[key].pos[0] -= player.speed * dt;
+                if( background[key].pos[0] < 0 && key !== 'grass_start' ){
+                    background[key].pos[0] = canvas.width + Math.floor((Math.random() * 300) + 1);
+                }
+            }
+        }
+    }
+}
+
 function updateEntities(dt) {
     // Update the player sprite animation
     player[actions].update(dt);
-
+    // Update the enemy sprite animation
     enemy[enemy_actions].update(dt);
-
+    // Update explosion animation
     explosions.explosion.update(dt);
 }
 
@@ -195,13 +252,17 @@ function handleInput(dt) {
     if(input.isDown('RIGHT')) {
         if( enemy.health > 0 ){
             if( enemy.pos[0] - player.pos[0] > 70 ){
-                player.pos[0] += player.speed * dt;
+                if( player.pos[0] < canvas.width / 2 ){
+                    player.pos[0] += player.speed * dt;
+                }
                 actions = 'walk_right';
             } else{
                 actions = 'stay';
             }
         } else {
-            player.pos[0] += player.speed * dt;
+            if( player.pos[0] < canvas.width / 2 ){
+                player.pos[0] += player.speed * dt;
+            }
             actions = 'walk_right';
         }
     }
@@ -276,6 +337,7 @@ function playerActions() {
     }
 }
 
+
 var drop = false,
     drop_type;
 function enemyActions(dt) {
@@ -329,12 +391,12 @@ function enemyActions(dt) {
 function checkAllText() {
     if( !gameOver ){
         if( input.isDown('LEFT') && player.pos[0] < 21 ){
-            ctx.font = "20px Comic Sans MS";
+            ctx.font = "20px Arial";
             ctx.fillStyle = "#ff0000";
             ctx.fillText("I can`t leave!",60,280);
         }
 
-        ctx.font = "18px Comic Sans MS";
+        ctx.font = "18px Arial";
         ctx.fillStyle = "#000000";
 
         //player text
@@ -388,6 +450,8 @@ function checkEnemySpawn() {
 function render(dt) {
     // Render the player if the game isn't over
 
+    renderBack();
+
     renderEntity(player,actions);
 
     renderEntity(enemy,enemy_actions);
@@ -395,6 +459,15 @@ function render(dt) {
     checkAll(dt);
 
 
+}
+var item;
+function renderBack(){
+    for (var key in background) {
+       item = key;
+        item = new Image();
+        item.src = background[key].src;
+        ctx.drawImage(item, background[key].pos[0], background[key].pos[1]);
+    }
 }
 
 function renderEntity(entity,actions) {
