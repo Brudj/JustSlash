@@ -1,3 +1,4 @@
+(function() {
 var requestAnimFrame = (function(){
     return window.requestAnimationFrame       ||
         window.webkitRequestAnimationFrame ||
@@ -438,5 +439,5 @@ function update(dt) {
             }
         }
     }
-
-init();
+    init()
+})();
