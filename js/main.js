@@ -117,6 +117,7 @@ var gameOver = true,
 function start(){
     document.getElementById('start-overlay').style.display = 'none';
     player.health = 100;
+    player.mana = 100;
     actions = 'stay';
     player.pos = [20, 262];
     enemy.pos = [canvas.width-150, 280];
