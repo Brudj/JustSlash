@@ -10,6 +10,7 @@
         this.once = once;
         this.stay = stay || 0;
         this.type = type || 0;
+        this.deathtime = deathTime;
     };
 
     Sprite.prototype = {
@@ -29,7 +30,7 @@
                         frame = max-1;
                     }
                     if( !this.type ) {
-                        if (Date.now() - deathTime > 2900) {
+                        if (Date.now() - this.deathtime > 2900) {
                             this._index = 0;
                         }
                     }
