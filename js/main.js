@@ -56,6 +56,7 @@ function start(){
     enemy.pos = [canvas.width-150, 280];
     enemy.health = 100;
     gameOver = false;
+    drop = false;
 }
 
 //gameOver function
@@ -150,7 +151,7 @@ var lastEnemyAttack = Date.now(),
 
 var explosions = {
     pos: [enemy.pos[0], 262],
-    explosions : new Sprite('img/enemy/skeleton.png', [0, 510], [109, 110], 4, [0,1])
+    explosion : new Sprite('img/enemy/skeleton.png', [0, 510], [109, 110], 4, [0,1])
 };
 
 function update(dt) {
@@ -169,7 +170,7 @@ function updateEntities(dt) {
 
     enemy[enemy_actions].update(dt);
 
-    explosions.explosions.update(dt);
+    explosions.explosion.update(dt);
 }
 
 function handleInput(dt) {
@@ -192,17 +193,22 @@ function handleInput(dt) {
     }
 
     if(input.isDown('RIGHT')) {
-        if( enemy.pos[0] - player.pos[0] > 70){
+        if( enemy.health > 0 ){
+            if( enemy.pos[0] - player.pos[0] > 70 ){
+                player.pos[0] += player.speed * dt;
+                actions = 'walk_right';
+            } else{
+                actions = 'stay';
+            }
+        } else {
             player.pos[0] += player.speed * dt;
             actions = 'walk_right';
-        } else{
-            actions = 'stay';
         }
     }
 
     if(input.isDown('SPACE') ){
         actions = 'attack';
-        if( enemy.pos[0] - player.pos[0] < 120 && Date.now() - lastAttack > 800 ){
+        if( enemy.pos[0] - player.pos[0] < 100 && Date.now() - lastAttack > 800 ){
             if( enemy.health > 0 ){
                 enemy.health -=25;
             }
@@ -213,7 +219,6 @@ function handleInput(dt) {
 
 function checkAll(dt) {
     //all enemy logic and actions
-
     enemyActions(dt);
 
     //all player actions
@@ -221,6 +226,9 @@ function checkAll(dt) {
 
     //check for text
     checkAllText();
+
+    //check drop
+    checkDrop();
 
     //check enemy spawn
     checkEnemySpawn();
@@ -235,14 +243,29 @@ function playerActions() {
         if( player.mana < 100 && !input.isDown('UP') ){
             player.mana +=0.05;
         }
+        //check for drop
+        if( drop ){
+            if( player.pos[0] + 30 > enemy.pos[0] ){
+                if( drop_type == 'health' ){
+                    player.health += 20;
+                    if( player.health > 100 ){
+                        player.health = 100;
+                    }
+                } else{
+                    player.mana += 25;
+                    if( player.mana > 100 ){
+                        player.mana = 100;
+                    }
+                }
+                drop = false;
+            }
+        }
         //check for spell use
         if( input.isDown('UP') && player.mana > 0 && enemy.state !== 0 && Date.now() - lastAttack > 10 ){
             enemy.health -=2;
             player.mana -=1;
             lastAttack = Date.now();
-            renderEntity(explosions,'explosions');
-           // console.log(enemy.pos[0]);
-          //  explosions.explosions.render(ctx);
+            renderEntity(explosions,'explosion');
         }
     } else{
         if ( actions != 'death' ){
@@ -253,6 +276,8 @@ function playerActions() {
     }
 }
 
+var drop = false,
+    drop_type;
 function enemyActions(dt) {
     //check for Player Health
     if( player.health > 0 ){
@@ -286,6 +311,14 @@ function enemyActions(dt) {
             if( enemy.state ){
                 enemy_actions = 'die';
                 deathTime = Date.now();
+                if( Math.random() >= 0.5 ){
+                    drop = true;
+                    if( Math.random() >= 0.5 ){
+                        drop_type = 'health';
+                    } else{
+                        drop_type = 'mana';
+                    }
+                }
             }
             enemy.state = 0;
         }
@@ -324,6 +357,20 @@ function checkAllText() {
         }
     }
 }
+
+//check drop
+function checkDrop(){
+    if( drop ){
+        var potion = new Image();
+        potion.src = 'img/items/potions.png';
+        if( drop_type == 'health' ){
+            ctx.drawImage(potion, 0, 0, 20, 30, enemy.pos[0]+10, enemy.pos[1]+85, 20, 30);
+        } else {
+            ctx.drawImage(potion, 30, 0, 20, 30, enemy.pos[0]+10, enemy.pos[1]+85, 20, 30);
+        }
+    }
+}
+
 //enemy spawn timer
 function checkEnemySpawn() {
     if( !enemy.state ){
@@ -331,6 +378,7 @@ function checkEnemySpawn() {
             enemy.pos[0] = canvas.width;
             enemy.health = 100;
             enemy.state = 1;
+            drop = false;
         }
     }
 }
