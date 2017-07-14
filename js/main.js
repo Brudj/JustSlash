@@ -367,9 +367,7 @@ function update(dt) {
         if( input.isDown('RIGHT') && player.pos[0] > canvas.width / 2 ){
             //check for enemy health and position
             if( enemy.pos[0] - player.pos[0] > 70 || enemy.health <= 0 ){
-                if( enemy.health <= 0 ){
-                    enemy.pos[0] -= player.speed * dt;
-                }
+                enemy.pos[0] -= player.speed * dt;
                 for (var key in background) {
                     if( background[key].infinite ){
                         background[key].start -= player.speed * dt;
