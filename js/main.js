@@ -25,6 +25,8 @@ var player = {
     speed: 160,
     action: 'stay',
     bar_start: 20,
+    distance: 0,
+    kills: 0,
     stay: new Sprite('img/hero/hero.png', [0, 0], [83, 141], 6, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
     walk_right: new Sprite('img/hero/hero.png', [-5, 135], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     walk_left: new Sprite('img/hero/hero.png', [-10, 270], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -111,7 +113,9 @@ var gameOver = true,
     deathTime,
     //drop info
     drop = false,
-    drop_type;
+    drop_type,
+    //distance
+    half = false;
 
 //Start new game
 function start(){
@@ -120,6 +124,8 @@ function start(){
     player.mana = 100;
     actions = 'stay';
     player.pos = [20, 262];
+    player.distance = 0;
+    player.kills = 0;
     enemy.pos = [canvas.width-150, 280];
     enemy.health = 100;
     gameOver = false;
@@ -243,6 +249,7 @@ function render(dt) {
                 } else{
                     if( enemy.state ){
                         enemy_actions = 'die';
+                        player.kills++;
                         deathTime = Date.now();
                         if( Math.random() >= 0.5 ){
                             drop = true;
@@ -318,6 +325,10 @@ function render(dt) {
                     ctx.fillStyle = '#ff0000';
                     ctx.fillRect(player.bar_start, 35, player.health*2, 25);
                     ctx.fillText(''+player.health+'%',player.bar_start,30);
+                    //distance
+                    ctx.fillText('Distance: '+Math.round(player.distance)+' m',canvas.width/2-100,30);
+                    //kills
+                    ctx.fillText('Kills: '+player.kills,canvas.width/2+40,30);
                     //player mana
                     ctx.fillStyle = player.color;
                     ctx.fillRect(player.bar_start, 65, player.mana*2, 15);
@@ -385,6 +396,7 @@ function update(dt) {
                     }
                 }
             }
+            player.distance += 0.05;
         }
     }
 
@@ -431,6 +443,12 @@ function update(dt) {
                     player.pos[0] += player.speed * dt;
                 }
                 actions = 'walk_right';
+            }
+            //update distance
+            if ( player.pos[0] < canvas.width / 2 && !half ){
+                player.distance += 0.05;
+            } else {
+                half = true;
             }
         }
 
