@@ -17,24 +17,6 @@ canvas.height = 480;
 document.body.appendChild(canvas);
 
 // player object
-// var player = {
-//     pos: [20, 262],
-//     health: 100,
-//     mana : 100,
-//     color: '#481cd5',
-//     speed: 160,
-//     action: 'stay',
-//     bar_start: 20,
-//     stay: new Sprite('img/hero/stay.png', [0, 0], [83, 141], 6, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-//     walk_right: new Sprite('img/hero/walk.png', [15, 0], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-//     walk_left: new Sprite('img/hero/walk.png', [0, 131], [99, 141], 10, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-//     run_right: new Sprite('img/hero/run.png', [0, 131], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-//     run_left: new Sprite('img/hero/run.png', [0, 0], [100, 141], 14, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-//     attack: new Sprite('img/hero/attack.png', [-9, 0], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-//     spell: new Sprite('img/hero/summon.png', [0, 0], [111.44, 131], 8, [8, 7, 6, 5, 4, 3, 2, 1, 0]),
-//     damage: new Sprite('img/hero/hit.png', [0, 0], [113, 131], 3, [0,1]),
-//     death: new Sprite('img/hero/hero_death.png', [0, 0], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,1)
-// };
 var player = {
     pos: [20, 262],
     health: 100,
@@ -239,7 +221,7 @@ function render(dt) {
                         if( player.pos[0] + 70 < enemy.pos[0] ){
                             enemy_actions = 'walk';
                             explosions.pos[0] = enemy.pos[0];
-                           // enemy.pos[0] -= enemy.speed * dt;
+                            enemy.pos[0] -= enemy.speed * dt;
                         } else {
                             if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
                                 //check for player attack
