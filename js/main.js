@@ -35,7 +35,7 @@ var player = {
     spell: new Sprite('img/hero/hero.png', [0, 667], [111.44, 131], 8, [8, 7, 6, 5, 4, 3, 2, 1, 0]),
     attack: new Sprite('img/hero/hero.png', [-8, 800], [132.7, 131], 24, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     damage: new Sprite('img/hero/hero.png', [0, 935], [113, 131], 3, [0,1]),
-    death: new Sprite('img/hero/hero.png', [-5, 1066], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true,PlayerDeathTime,1)
+    death: new Sprite('img/hero/hero.png', [-5, 1066], [159.6, 131], 10, [0, 1, 2, 3, 4, 5],'horizontal',true,true)
 };
 //enemy object
 var enemy = {
@@ -50,7 +50,7 @@ var enemy = {
     walk: new Sprite('img/enemy/skeleton.png', [0, 110], [109, 110], 4, [0,1, 2, 3]),
     attack: new Sprite('img/enemy/skeleton.png', [0, 364], [109, 110], 6, [0, 1, 2, 3]),
     damage: new Sprite('img/enemy/skeleton.png', [0, 230], [109, 135], 4, [0,1],'vertical'),
-    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true,deathTime)
+    die: new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true)
 };
 //explosions
 var explosions = {
@@ -103,6 +103,10 @@ var gameOver = true,
     lastTime,
     item,
     draw_start,
+    text_show_time = Date.now(),
+    text_show = false,
+    text_target = 'player',
+    text_type = 'physic',
     //player vars
     lastAttack = Date.now(),
     actions = player.action,
@@ -142,7 +146,8 @@ function finish(){
 
 //start after load picture
 resources.load([
-    'img/hero/hero.png'
+    'img/hero/hero.png',
+    'img/enemy/skeleton.png'
 ]);
 resources.onReady(init);
 
@@ -209,6 +214,8 @@ function render(dt) {
         enemyActions(dt);
         //all player actions
         playerActions();
+        //check damage
+        checkDamage();
         //check for text
         checkAllText();
         //check drop
@@ -229,24 +236,12 @@ function render(dt) {
                             explosions.pos[0] = enemy.pos[0];
                             enemy.pos[0] -= enemy.speed * dt;
                         } else {
-                            if( player.pos[0] + 70 >= enemy.pos[0] && Date.now() - lastEnemyAttack > 800 ){
-                                //check for player attack
-                                if( input.isDown('SPACE') ){
-                                    enemy_actions = 'damage';
-                                } else{
-                                    //check for health
-                                    if( player.health !== 0 ){
-                                        enemy_actions = 'attack';
-                                        actions = 'damage';
-                                        player.health -=10;
-                                        lastEnemyAttack = Date.now();
-                                    }
-                                }
-
+                            if( enemy_actions !== 'damage' ){
+                                enemy_actions = 'attack';
                             }
                         }
                     }
-                } else{
+                } else {
                     if( enemy.state ){
                         enemy_actions = 'die';
                         player.kills++;
@@ -294,6 +289,9 @@ function render(dt) {
                 }
                 //check for spell use
                 if( input.isDown('UP') && player.mana > 0 && enemy.state !== 0 && Date.now() - lastAttack > 10 ){
+                    text_show = true;
+                    text_target = 'enemy';
+                    text_type = 'spell';
                     enemy.health -=2;
                     player.mana -=1;
                     lastAttack = Date.now();
@@ -305,6 +303,38 @@ function render(dt) {
                     actions = 'death';
                 }
                 finish();
+            }
+        }
+
+        function checkDamage(){
+            //main check
+            if( enemy.pos[0] - player.pos[0] < 100 && enemy.health > 0 ){
+                //enemy_actions = 'attack';
+                if( input.isDown('SPACE') ){
+                    if( Date.now() - lastAttack > 800 ){
+                        if( enemy_actions == 'attack' ){
+                            if( Math.random() >= 0.5 ){
+                                enemy.health -=25;
+                                enemy_actions = 'damage';
+                                text_type = 'physical';
+                            } else {
+                                actions = 'damage';
+                                player.health -=10;
+                            }
+                        } else {
+                            enemy.health -=25;
+                            enemy_actions = 'damage';
+                            text_type = 'physical';
+                        }
+                        lastAttack = Date.now();
+                    }
+                } else {
+                    if( Date.now() - lastEnemyAttack > 800 && player.health > 0 ){
+                        actions = 'damage';
+                        player.health -=10;
+                        lastEnemyAttack = Date.now();
+                    }
+                }
             }
         }
 
@@ -341,6 +371,41 @@ function render(dt) {
                     ctx.fillText(''+enemy.health+'%',enemy.bar_start,30);
                     ctx.fillRect(enemy.bar_start, 35, enemy.health*2, 25);
                 }
+
+                player.watch('health', function (id, oldval, newval) {
+                    if( Date.now() - text_show_time > 100 ){
+                        text_show = !text_show;
+                    }
+                    text_target = 'player';
+                    text_show_time = Date.now();
+                    //console.log('o.' + id + ' changed from ' + oldval + ' to ' + newval);
+                    return newval;
+                });
+                enemy.watch('health', function (id, oldval, newval) {
+                    if( Date.now() - text_show_time > 100 ){
+                        text_show = !text_show;
+                    }
+                    text_target = 'enemy';
+                    text_show_time = Date.now();
+                    return newval;
+                });
+                if( text_show ){
+                    ctx.fillStyle = '#ff0000';
+                    if( text_target == 'player' ){
+                        if( enemy_actions == 'attack' ){
+                            ctx.fillText('-10%',player.pos[0]+15,player.pos[1]+20);
+                        }
+                    }
+                    if( text_target == 'enemy' ){
+                        if( actions == 'attack' || actions == 'spell' ){
+                            if( text_type == 'physical' ){
+                                ctx.fillText('-25%',enemy.pos[0]+45,player.pos[1]+20);
+                            } else if( text_type == 'spell' && player.mana > 0 && enemy.health > 0 ) {
+                                ctx.fillText('-2%',enemy.pos[0]+Math.floor((Math.random() * 45) + 1),player.pos[1]+Math.floor((Math.random() * 20) + 1));
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -361,6 +426,7 @@ function render(dt) {
         function checkEnemySpawn() {
             if( !enemy.state ){
                 if( Date.now() - deathTime > 2900 ){
+                    enemy.die = new Sprite('img/enemy/skeleton.png', [0, 650], [109, 110], 8, [0,1,2],'horizontal',true,true);
                     enemy.pos[0] = canvas.width;
                     enemy.health = 100;
                     enemy.state = 1;
@@ -454,11 +520,5 @@ function update(dt) {
 
         if(input.isDown('SPACE') ){
             actions = 'attack';
-            if( enemy.pos[0] - player.pos[0] < 100 && Date.now() - lastAttack > 800 ){
-                if( enemy.health > 0 ){
-                    enemy.health -=25;
-                }
-                lastAttack = Date.now();
-            }
         }
     }
