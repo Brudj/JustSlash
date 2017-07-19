@@ -110,7 +110,6 @@ var gameOver = true,
     //player vars
     lastAttack = Date.now(),
     actions = player.action,
-    PlayerDeathTime,
     //enemy vars
     lastEnemyAttack = Date.now(),
     enemy_actions = enemy.action,
@@ -223,7 +222,6 @@ function render(dt) {
         //check enemy spawn
         checkEnemySpawn();
     }
-
         function enemyActions(dt) {
             //check for Player Health
             if( player.health > 0 ){
@@ -232,7 +230,9 @@ function render(dt) {
                     if( !gameOver ){
                         //check for enemy position
                         if( player.pos[0] + 70 < enemy.pos[0] ){
-                            enemy_actions = 'walk';
+                            if( enemy_actions !== 'walk' ){
+                                enemy_actions = 'walk';
+                            }
                             explosions.pos[0] = enemy.pos[0];
                             enemy.pos[0] -= enemy.speed * dt;
                         } else {
@@ -243,7 +243,9 @@ function render(dt) {
                     }
                 } else {
                     if( enemy.state ){
-                        enemy_actions = 'die';
+                        if( enemy_actions !== 'die' ){
+                            enemy_actions = 'die';
+                        }
                         player.kills++;
                         deathTime = Date.now();
                         if( Math.random() >= 0.5 ){
@@ -299,7 +301,6 @@ function render(dt) {
                 }
             } else{
                 if ( actions !== 'death' ){
-                    PlayerDeathTime = Date.now();
                     actions = 'death';
                 }
                 finish();
@@ -481,16 +482,22 @@ function update(dt) {
         }
 
         if(input.isDown('UP')) {
-            actions = 'spell';
+            if( actions !== 'spell' ){
+                actions = 'spell';
+            }
         }
 
         if(input.isDown('LEFT')) {
             if(player.pos[0] < 21) {
                 player.pos[0] = 20;
-                actions = 'stay';
+                if( actions !== 'stay' ){
+                    actions = 'stay';
+                }
             } else{
                 player.pos[0] -= player.speed * dt;
-                actions = 'walk_left';
+                if( actions !== 'walk_left' ){
+                    actions = 'walk_left';
+                }
             }
         }
 
@@ -500,15 +507,21 @@ function update(dt) {
                     if( player.pos[0] < canvas.width / 2 ){
                         player.pos[0] += player.speed * dt;
                     }
-                    actions = 'walk_right';
+                    if( actions !== 'walk_right' ){
+                        actions = 'walk_right';
+                    }
                 } else{
-                    actions = 'stay';
+                    if( actions !== 'stay' ){
+                        actions = 'stay';
+                    }
                 }
             } else {
                 if( player.pos[0] < canvas.width / 2 ){
                     player.pos[0] += player.speed * dt;
                 }
-                actions = 'walk_right';
+                if( actions !== 'walk_right' ){
+                    actions = 'walk_right';
+                }
             }
             //update distance
             if ( player.pos[0] < canvas.width / 2 && !half ){
@@ -519,6 +532,8 @@ function update(dt) {
         }
 
         if(input.isDown('SPACE') ){
-            actions = 'attack';
+            if( actions !== 'attack' ){
+                actions = 'attack';
+            }
         }
     }
